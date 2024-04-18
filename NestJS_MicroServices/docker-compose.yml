@@ -1,6 +1,16 @@
-version: '3'
+version: "3.9"
 services:
 
+  eureka-server:
+    container_name: eureka-container
+    image: "eureka-server-image"
+    build: ./Eureka-Server
+    hostname: localhost
+    networks:
+      - office-network
+    ports:
+      - "8761:8761"   
+   
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq-container
@@ -10,24 +20,69 @@ services:
     ports:
       - '5672:5672'
       - '15672:15672'
+    networks:
+      - office-network
     env_file:
       - .env
 
-  mysql2:
+  auth:
+    image: "auth-image"
+    build:
+      context: ./
+      dockerfile: ./apps/auth/Dockerfile
+    container_name: auth-container
+    networks:
+      - office-network
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+    volumes:
+      - ./auth-app:/usr/src/app# any change to base folder should be reflected
+      - /usr/src/app/node_modules
+    command: npm run start:dev auth # overrides CMD from dockerfile
+
+  mysql:
     image: "mysql:8.3"
+    networks:
+      - office-network
     container_name: mysql-container 
     environment:
       #- MYSQL_ALLOW_EMPTY_PASSWORD=yes
       #- MYSQL_USER=root
-      - MYSQL_DATABASE=mytestdatabase
+      - MYSQL_DATABASE=hr_management_platform
       - MYSQL_ROOT_PASSWORD=axelites_pwd
       - MYSQL_SYNCHRONIZE=true
     ports:
-      - "3307:3306"
+      - "3306:3306"
     restart: unless-stopped  
     volumes: # you need to delete this volume or else docker will only create the db the first time
     # then it will look into this volume and does not check if it exist or not (docker volume ls - docker volume rm 5twingraduationproject_db) 
       - db:/var/lib/mysql
 
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    networks:
+      - office-network
+    container_name: phpmyadmin-container
+    #you can use env_file param then pass ".env" path instead
+    environment:
+      - PMA_HOST=mysql
+      #- PMA_USER=root
+      #- PMA_ROOT_PASSWORD=axelites_pwd
+      #- PMA_PASSWORD=axelites_pwd
+    ports:
+      - "8095:80"
+    restart: unless-stopped
+    depends_on:
+      - mysql
+
+
 volumes:
   db:
+
+
+networks:
+  office-network:
+    driver: bridge
+
