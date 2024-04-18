@@ -1,0 +1,33 @@
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          # lower-case-service-id: true
+          enabled: true
+      routes:
+        - id: AUTH_SERVICE
+          uri: http://localhost:3000/
+          predicates:
+            - Path=/auth/**,/permissions/**,/users/**,/roles/**
+
+        - id: TEST_SERVICE
+          uri: http://localhost:3600/
+          predicates:
+            - Path=/test/**
+
+    #Cors Configuration:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:5173"
+            allowedHeaders: "*"
+            allowedMethods: "*"
+            allowCredentials: true
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+
