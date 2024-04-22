@@ -11,7 +11,7 @@ import { join } from 'path';
       TypeOrmModule.forRootAsync({
          useFactory: (configService: ConfigService) => ({
           type: 'mysql',
-          host: 'mysql',
+          host: 'mysqlv2',
           username: 'root',
           //password: configService.getOrThrow('MYSQL_PASSWORD'),
           password: 'axelites_pwd',

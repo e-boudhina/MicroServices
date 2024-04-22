@@ -7,12 +7,12 @@ spring:
           enabled: true
       routes:
         - id: AUTH_SERVICE
-          uri: http://localhost:3000/
+          uri: http://auth:3000/
           predicates:
             - Path=/auth/**,/permissions/**,/users/**,/roles/**
 
         - id: TEST_SERVICE
-          uri: http://localhost:3600/
+          uri: http://test:3600/
           predicates:
             - Path=/test/**
 
