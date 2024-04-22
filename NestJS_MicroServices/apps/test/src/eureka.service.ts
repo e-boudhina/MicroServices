@@ -24,7 +24,7 @@ export class EurekaService {
         },
       },
       eureka: {
-        host: 'localhost', // Eureka server host
+        host: 'eureka-server', // Eureka server host
         port: 8761, // Eureka server port
         servicePath: '/eureka/apps/',
         maxRetries: 10,

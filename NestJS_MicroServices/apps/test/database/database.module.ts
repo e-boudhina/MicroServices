@@ -11,11 +11,11 @@ import { join } from 'path';
       TypeOrmModule.forRootAsync({
          useFactory: (configService: ConfigService) => ({
           type: 'mysql',
-          host: 'localhost',
+          host: 'mysql',
           username: 'root',
           //password: configService.getOrThrow('MYSQL_PASSWORD'),
           password: 'axelites_pwd',
-          port: 3307,
+          port: 3306,
           database: 'mytestdatabase',
           autoLoadEntities: true,
           //Automaticly synchronize databases colums, if you change something here it automaticly updates the db
