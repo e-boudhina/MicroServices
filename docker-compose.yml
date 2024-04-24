@@ -10,7 +10,7 @@ services:
       - office-network
     ports:
       - "8761:8761"  
-    restart: unless-stopped   
+    #restart: on-failure   
 
   api-gateway:
     container_name: api-gateway-container
@@ -26,7 +26,7 @@ services:
       - TEST_SERVICE_URL=http://test:3600
     depends_on:
       - eureka-server
-    restart: unless-stopped  
+    #restart: on-failure 
 
    
   rabbitmq:
@@ -42,7 +42,7 @@ services:
       - office-network
     env_file:
       - ./NestJS_MicroServices/.env
-    restart: unless-stopped  
+    #restart: on-failure  
 
   auth:
     image: "auth-image"
@@ -61,15 +61,17 @@ services:
       - rabbitmq
       - api-gateway
     healthcheck:
-      #test: ["CMD", "sh", "-c", "curl -f http://eureka-server:8761/actuator/health || exit 1"]
+      test: ["CMD", "sh", "-c", "curl -f http://eureka-server:8761/actuator/health || exit 1"]
       interval: 10s
       retries: 5
       start_period: 30s
+      timeout: 30s # default value
     #volumes:
     #  - ./auth-app:/usr/src/app# any change to base folder should be reflected
     #  - /usr/src/app/node_modules
-    restart: unless-stopped  
-    command: npm run start:dev auth # overrides CMD from dockerfile
+    #restart: on-failure 
+    #command: npm run start:dev auth # overrides CMD from dockerfile
+    #command: ["sh", "-c", "/usr/src/app/checkmysql.sh"]
 
   mysql:
     image: "mysql:8.3"
@@ -87,7 +89,7 @@ services:
     volumes: # you need to delete this volume or else docker will only create the db the first time
     # then it will look into this volume and does not check if it exist or not (docker volume ls - docker volume rm 5twingraduationproject_db) 
       - db:/var/lib/mysql
-    restart: unless-stopped  
+    #restart: on-failure 
 
   test:
     image: "test-image"
@@ -114,7 +116,7 @@ services:
     #volumes:
     #   - ./auth-app:/usr/src/app# any change to base folder should be reflected
     #  - /usr/src/app/node_modules
-    restart: unless-stopped 
+    #restart: on-failure
     command: npm run start:dev test # overrides CMD from dockerfile
 
   mysqlv2:
@@ -128,7 +130,7 @@ services:
       - office-network
     ports:
       - "3307:3306" 
-    restart: unless-stopped  
+    #restart: on-failure  
     volumes: # you need to delete this volume or else docker will only create the db the first time
     # then it will look into this volume and does not check if it exist or not (docker volume ls - docker volume rm 5twingraduationproject_db) 
       - db2:/var/lib/mysql2    
@@ -146,7 +148,7 @@ services:
       #- PMA_PASSWORD=axelites_pwd
     ports:
       - "8095:80"
-    restart: unless-stopped
+    #restart: unless-stopped
     depends_on:
       - mysql
 
