@@ -1,4 +1,4 @@
-import { Body, Injectable, Post, HttpStatus, HttpCode, InternalServerErrorException, Res, HttpException, ConflictException } from '@nestjs/common';
+import { Body, Injectable, Post, HttpStatus, HttpCode, InternalServerErrorException, Res, HttpException, ConflictException, Inject } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { EntityManager, Repository } from 'typeorm';
@@ -9,12 +9,15 @@ import { promisify } from 'util';
 import * as bcrypt from 'bcrypt';
 import { Role } from '../roles/entities/role.entity';
 import { MailService } from '../mail/mail.service';
+import { EMAIL_SERVICE } from '../common/constants/services';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
 
 
 const setTimeoutPromise = promisify(setTimeout);
 @Injectable()
 export class UsersService {
-
+  private readonly logger = new Logger(UsersService.name);
   private readonly charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+';
 
   /*
@@ -27,7 +30,8 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Role)
     private readonly rolesRepository: Repository<Role>,
-    private readonly mailService: MailService,
+    //private readonly mailService: MailService,
+    @Inject(EMAIL_SERVICE) private readonly emailService: ClientProxy
     //private readonly entityManager: EntityManager,
     //private readonly logger = new Logger()
     ){};
@@ -47,7 +51,7 @@ export class UsersService {
         }
         
         //Hashing password
-        console.log("password = "+userDTO.password)
+        //console.log("password = "+userDTO.password)
         const rawGenatedPwd = this.generateRandomPassword();
         //console.log('generated pwd'+rawGenatedPwd);
         const pwdHash = await this.hashData(rawGenatedPwd);
@@ -72,13 +76,11 @@ export class UsersService {
         //Success
         //Notify user via email
         //figure out a way on how 2 send 2 return to the front end ( user created + user notified)
-        console.log("Sending User Created Email...");
-        this.mailService.sendNewUserWithRoleEmail(newUser, rawGenatedPwd).then((res)=> console.log(res)); 
-        
-        return {
-               statusCode: HttpStatus.CREATED,
-               message: 'User Created Successfully!'
-        }
+        this.logger.log('Sending User Created Email Payload...');
+        //this.mailService.sendNewUserWithRoleEmail(newUser, rawGenatedPwd).then((res)=> console.log(res)); 
+        const response = await lastValueFrom(this.emailService.send({ cmd: 'send_create_user_email' }, {newUser, rawGenatedPwd})); 
+        this.logger.log(response.message);
+        return response;
 
         //Only for signup - not needed here
         /* 
@@ -87,7 +89,7 @@ export class UsersService {
         return tokens;
         */
     }catch(error){
-        //console.log(error);
+        console.log(error);
         //console.log('Caught exception status code: ', error.getStatus());
         //throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
         // throw new HttpException(error.message, error.status);

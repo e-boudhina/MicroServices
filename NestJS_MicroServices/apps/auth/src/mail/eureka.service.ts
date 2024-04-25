@@ -8,22 +8,23 @@ export class EurekaService {
   constructor() {
     this.eurekaClient = new Eureka({
       instance: {
-        app: 'Auth_Service',
+        app: 'test-Service',
         hostName: 'localhost', // Your service's hostname
-        instanceId: 'auth-service:3000',
+        instanceId: 'test-service',
         ipAddr: '127.0.0.1', // Your service's IP address
+        //for a microservice that does not have a port I think eureka might not be suitable
         port: {
-          '$': 3000, // Your service's port
+          '$': 0, // Your service's port
           '@enabled': true,
         },
-        vipAddress: 'Auth_Service',
+        vipAddress: 'TEST_Service',
         dataCenterInfo: {
           '@class': 'com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo',
           name: 'MyOwn',
         },
       },
       eureka: {
-        host: 'localhost', // Eureka server host
+        host: 'eureka-server', // Eureka server host
         port: 8761, // Eureka server port
         servicePath: '/eureka/apps/',
         maxRetries: 10,

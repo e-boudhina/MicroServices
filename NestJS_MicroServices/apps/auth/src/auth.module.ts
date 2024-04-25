@@ -16,7 +16,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RmqModule } from '@app/common';
 import { RolesService } from './roles/roles.service';
 import { ClientProxyFactory, ClientsModule, Transport } from '@nestjs/microservices';
-import { TEST_SERVICE } from './common/constants/services';
+import { EMAIL_SERVICE, TEST_SERVICE } from './common/constants/services';
 import { DatabaseModule } from './common/database/database.module';
 import { EurekaService } from './eureka.service';
 import { APP_GUARD } from '@nestjs/core';
@@ -36,7 +36,9 @@ import { AtGuard } from './common/guards';
     RmqModule.register({
       name: TEST_SERVICE,
     }),
-    
+    RmqModule.register({ 
+      name: EMAIL_SERVICE,
+    })
 
    
   ], 

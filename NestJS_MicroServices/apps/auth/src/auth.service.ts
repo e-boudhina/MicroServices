@@ -1,4 +1,4 @@
-import { ForbiddenException, HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import { ForbiddenException, HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './users/dto/create-user.dto';
 import { User } from './users/entities/user.entity';
@@ -14,11 +14,14 @@ import { randomBytes } from 'crypto';
 import { Role } from './roles/entities/role.entity';
 import { RoleType } from './roles/entities/roles.enum';
 import { Request, Response } from 'express';
+import { EMAIL_SERVICE } from './common/constants/services';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
 
 
 @Injectable()
 export class AuthService {
-
+    private readonly logger = new Logger(AuthService.name);
     constructor(
         @InjectRepository(User)
         private readonly usersRepository: Repository<User>,
@@ -26,7 +29,8 @@ export class AuthService {
         private readonly rolesRepository: Repository<Role>,
         //private readonly entityManager: EntityManager,
         private readonly jwtService: JwtService,
-        private readonly mailService: MailService
+        private readonly mailService: MailService,
+        @Inject(EMAIL_SERVICE) private readonly emailService: ClientProxy
         ){}
     
     //Helper function
@@ -263,18 +267,20 @@ export class AuthService {
             user.passwordResetToken = generatedResetPasswordToken;
             user.resetPasswordExpirationToken = new Date(Date.now() + (300 * 1000));
             await this.usersRepository.save(user);
-            console.log("Sending Reset Password Email...");
+            this.logger.log('Sending Reset Password Email Payload...');
+            
             interface ResetPasswordResponse {
                 message: string;
                 remainingTime?: number; // Add remainingTime as an optional property
               }
-            const response:ResetPasswordResponse  = await this.mailService.sendResetPasswordEmail(user);
+              
+            const response:ResetPasswordResponse = await lastValueFrom(this.emailService.send({ cmd: 'send_reset_password_email' }, user)); 
             const currentTimeInMs = Date.now();
-            const tokenExpirationTimeInMs =  user.resetPasswordExpirationToken.getTime();
-            const timeLeft  = tokenExpirationTimeInMs - currentTimeInMs;
+            const tokenExpirationTimeInMs =  user.resetPasswordExpirationToken.getTime(); 
+            const timeLeft  = tokenExpirationTimeInMs - currentTimeInMs; 
             const remainingTimeSeconds = timeLeft / 1000;
             response.remainingTime = remainingTimeSeconds;
-            
+            this.logger.log(response.message);
             return response;
 
         }catch(error) {
