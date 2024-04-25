@@ -43,7 +43,6 @@ RUN cat /checkMYSQLRediness.sh
 
 #A Dockerfile RUN command only runs once when the image is built; the entrypoint script runs every time you start the container. 
 ENTRYPOINT ["/bin/sh","/checkMYSQLRediness.sh"]
-CMD ["sh"]
 
 #This means that as long as the package.json and package-lock.json files don't change, Docker can reuse the previously cached layer where dependencies were installed.
 #This saves time during subsequent builds because Docker doesn't need to reinstall dependencies if the package files haven't changed.
