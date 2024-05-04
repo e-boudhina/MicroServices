@@ -13,6 +13,7 @@ import { Role } from "./roles/entities/role.entity";
 import { ClientProxy, Ctx, MessagePattern, RmqContext } from "@nestjs/microservices";
 import { firstValueFrom, lastValueFrom } from "rxjs";
 import { EMAIL_SERVICE, TEST_SERVICE } from "./common/constants/services";
+import { RegisterUserDto } from "./users/dto/register-user.dto";
 
 @Controller('auth')
 export class AuthController {
@@ -69,6 +70,32 @@ export class AuthController {
                 expires: refreshTokenExpirationDate
             });
             
+            return signinResponse;
+      //return tokens;
+        }catch(error){
+            if (error instanceof HttpException) {
+                console.log('instance of')
+                // If it's already an HttpException, rethrow it directly
+                throw error;
+            } else {
+                console.log(error)
+                // If it's not an HttpException, create a new one with a dynamic response
+                throw new HttpException(error.message, error.status);
+            }
+
+        }
+        
+    }
+
+    @Public()
+    @Post('/signup')
+    async signUp(@Body() userDTO: RegisterUserDto, @Res({passthrough: true}) response: Response)
+    {
+        try{
+            console.log("heelo");
+            const signinResponse = await this.authService.signUp(userDTO);
+
+
             return signinResponse;
       //return tokens;
         }catch(error){

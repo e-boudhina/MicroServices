@@ -128,4 +128,24 @@ export class UsersController {
       };
     }
   }
+  @Public()
+  @Post('disable-account/:id')
+  disableUserAccount(@Param('id') id: number) {
+    try {
+      console.log('hey');
+      return this.usersService.disableUserAccount(id);
+    }catch (error) {
+
+    }
+  }
+  @Public()
+  @Post('enable-account/:id')
+  enableUserAccount(@Param('id') id: number) {
+    try {
+      console.log('hey');
+      return this.usersService.enableUserAccount(id);
+    }catch (error) {
+
+    }
+  }
 }
