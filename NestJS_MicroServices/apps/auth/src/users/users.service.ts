@@ -161,9 +161,9 @@ export class UsersService {
 
   async update(id: number, updateUserDto: UpdateUserDto) {
     try{
-      
+      //console.log(updateUserDto);
       const result = await this.findOneBy(id);
-      console.log(result);
+      //console.log(result);
       if(result instanceof(User)){
         //console.log("updating");
         //console.log(result);
@@ -181,7 +181,7 @@ export class UsersService {
         const result3 = await this.usersRepository.update(id, updateUserDto);
         if(result3){
           return {
-            message: `User with id ${id} update succssfully!`,
+            message: `User updated succssfully!`,
             //data: result2
           }; 
         }
@@ -213,7 +213,7 @@ export class UsersService {
         const result2 = await this.usersRepository.remove(result);
         if(result2){
           return {
-            message: `User with id ${id} removed succssfully!`,
+            message: `User removed succssfully!`,
             data: result2
           }; 
         }

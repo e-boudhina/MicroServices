@@ -8,9 +8,13 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
 
     @MinLength(5, { message: 'Username should be at least 5 characters long'})
     @MaxLength(40, { message: 'Username should not exceed 40 characters'})
-    @IsNotEmpty({ message: 'Username must be provided'})
+    @IsOptional({ message: 'Username must be provided'})
     username: string;
 
+    @IsOptional()
+    disabled: boolean;
+
+    //create a separte dto for registration to allow password
     /*
     @MinLength(10, { message: 'Password should be at least 10 characters long'})
     @MaxLength(40, { message: 'Password should not exceed 40 characters'})

@@ -87,7 +87,7 @@ export class AuthService {
         await this.usersRepository.update(userId, { hashedRt: hash });
     }
 
-    async signIn(userDTO: CreateUserDto): Promise<any>{
+    async signIn(userDTO: RegisterUserDto): Promise<any>{
         try{ 
            
         const retrievedUser = await this.usersRepository.findOneBy({ email: userDTO.email });

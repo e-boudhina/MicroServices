@@ -29,7 +29,7 @@ export class AuthController {
     @Public()
     @Post('/signin')
     
-    async signin(@Body() userDTO: CreateUserDto, @Res({passthrough: true}) response: Response)
+    async signin(@Body() userDTO: RegisterUserDto, @Res({passthrough: true}) response: Response)
     {
         try{
             const signinResponse = await this.authService.signIn(userDTO);
