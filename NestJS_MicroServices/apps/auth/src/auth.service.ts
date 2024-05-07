@@ -117,11 +117,11 @@ export class AuthService {
         }catch(error){
            
             if (error instanceof HttpException) {
-                console.log('instance of')
+                console.log('instance of');
                 // If it's already an HttpException, rethrow it directly
                 throw error;
             } else {
-                console.log(error)
+                console.log(error);
                 // If it's not an HttpException, create a new one with a dynamic response
                 throw new HttpException(error.message, error.status);
             }

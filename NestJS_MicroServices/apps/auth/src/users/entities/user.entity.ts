@@ -29,7 +29,8 @@ export class User {
     @Column({unique: true}) 
     email: string;
     
-    @Exclude()
+    //@Exclude() //using discard will also prevent you from comparing passwrod since the respository uses this entity password will not be present
+    @Column() 
     password: string;
 
     
