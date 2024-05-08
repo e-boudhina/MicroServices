@@ -139,7 +139,30 @@ export class UsersService {
       throw new InternalServerErrorException('User creation failed!');
     }
   }
+  async getUsersByIds (ids : number []){
+    try {
+      const users = await this.usersRepository.findByIds(ids);
+      return users;
+    } catch(error){
+      throw new InternalServerErrorException('failed to retreive informations!');
+    }
+  }
 
+  async getUsersWhereNotInIDs(ids : number[]){
+    try{
+      if (ids.length == 0) return await this.getAllUsers();
+      const entitiesNotInIds = await this.usersRepository
+          .createQueryBuilder('users')
+          .where('users.id NOT IN (:...ids)', { ids :ids })
+          .getMany();
+      if(entitiesNotInIds)  return entitiesNotInIds;
+      else return [];
+
+    } catch(error){
+
+      throw new InternalServerErrorException('failed to retreive informations!');
+    }
+  }
   async getAuthenticatedUser(id: number):  Promise<any> {
     try{
       const retrievedUser= await this.usersRepository.findOneBy({id});

@@ -10,6 +10,7 @@ import * as jwt from 'jsonwebtoken';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CustomUploadFileTypeValidator } from './validators/CustomUploadFileTypeValidator';
 import { MAX_PROFILE_PICTURE_SIZE_IN_BYTES, VALID_UPLOADS_MIME_TYPES } from '../common/constants/variables';
+import { Ctx, MessagePattern, Payload, RmqContext } from "@nestjs/microservices";
 
 @Controller('users')
 export class UsersController {
@@ -42,7 +43,30 @@ export class UsersController {
       }
     }
   }
-  
+  @MessagePattern({ cmd: 'get_user_by_id' })
+  async findOne( @Ctx() context: RmqContext , @Payload() id: number ) {
+    const channel = context.getChannelRef();
+    const message = context.getMessage();// get message from context
+    channel.ack(message);
+
+    return this.usersService.findOneBy(id);
+
+  }
+  @MessagePattern({ cmd: 'get_users_by_ids' })
+  async findUsersByIds (@Ctx() context: RmqContext , @Payload() ids: number [] ){
+    const channel = context.getChannelRef();
+    const message = context.getMessage();// get message from context
+    channel.ack(message);
+    return this.usersService.getUsersByIds(ids);
+  }
+
+  @MessagePattern({cmd : 'get_users_not_in_ids'})
+  async findUsersNotHavingIds(@Ctx() context: RmqContext , @Payload() ids: number []){
+    const channel = context.getChannelRef();
+    const message = context.getMessage();// get message from context
+    channel.ack(message);
+    return this.usersService.getUsersWhereNotInIDs(ids);
+  }
 
 /*
   @Public()
