@@ -64,6 +64,15 @@
         "tsConfigPath": "apps/email/tsconfig.app.json"
       }
     },
+    "material-management": {
+      "type": "application",
+      "root": "apps/material-management",
+      "entryFile": "main",
+      "sourceRoot": "apps/material-management/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/material-management/tsconfig.app.json"
+      }
+    },
     "order-mission": {
       "type": "application",
       "root": "apps/order-mission",
@@ -73,6 +82,7 @@
         "tsConfigPath": "apps/order-mission/tsconfig.app.json"
       }
     },
+
     "leave-management": {
       "type": "application",
       "root": "apps/leave-management",
@@ -82,5 +92,6 @@
         "tsConfigPath": "apps/leave-management/tsconfig.app.json"
       }
     }
+
   }
 }
