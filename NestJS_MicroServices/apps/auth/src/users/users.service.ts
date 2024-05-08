@@ -14,6 +14,10 @@ import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { exit } from 'process';
 import { UserDto } from './dto/return-user.dto';
+import * as path from 'path';
+import * as fs from 'fs';
+
+
 
 
 const setTimeoutPromise = promisify(setTimeout);
@@ -113,7 +117,6 @@ export class UsersService {
       return await this.usersRepository.find({
         select: ['id', 'username', 'email',   'disabled', 'role_id'],
       }
-
       );
       
     }catch(error){
@@ -161,9 +164,9 @@ export class UsersService {
 
   async update(id: number, updateUserDto: UpdateUserDto) {
     try{
-      //console.log(updateUserDto);
+      
       const result = await this.findOneBy(id);
-      //console.log(result);
+      console.log(result);
       if(result instanceof(User)){
         //console.log("updating");
         //console.log(result);
@@ -181,7 +184,7 @@ export class UsersService {
         const result3 = await this.usersRepository.update(id, updateUserDto);
         if(result3){
           return {
-            message: `User updated succssfully!`,
+            message: `User with id ${id} update succssfully!`,
             //data: result2
           }; 
         }
@@ -213,7 +216,7 @@ export class UsersService {
         const result2 = await this.usersRepository.remove(result);
         if(result2){
           return {
-            message: `User removed succssfully!`,
+            message: `User with id ${id} removed succssfully!`,
             data: result2
           }; 
         }
@@ -264,6 +267,32 @@ export class UsersService {
         };
       }
     }
+  }
+
+  async storeImage(image: Express.Multer.File) {
+    /*
+    console.log(image.originalname);
+    console.log(__dirname);
+    const imagePath = path.join(__dirname, '..', 'profile', 'images', image.originalname);
+    console.log(imagePath);
+
+    // Check if the directory exists, if not create it
+    if (!fs.existsSync(path.dirname(imagePath))) {
+      fs.mkdirSync(path.dirname(imagePath), { recursive: true });
+    }
+
+    // Write the uploaded file to the destination
+    fs.writeFileSync(imagePath, image.buffer);
+
+    return `Image uploaded successfully: ${imagePath}`;
+    */
+      // You can access the file buffer directly without writing it to disk
+      const fileBuffer = image.buffer;
+
+      // You can now perform operations with the file buffer as needed
+      // For example, you can store it in a database, AWS S3, etc.
+  
+      return `Image uploaded successfully`;
   }
 
   //Helper functions

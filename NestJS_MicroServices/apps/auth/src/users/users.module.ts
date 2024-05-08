@@ -8,6 +8,8 @@ import { Role } from '../roles/entities/role.entity';
 import { MailModule } from '../mail/mail.module';
 import { RmqModule } from '@app/common';
 import { EMAIL_SERVICE } from '../common/constants/services';
+import { MulterModule } from '@nestjs/platform-express';
+import { multerConfig } from './multer-config';
 
 @Module({
   //WHat does for feature mean?
@@ -18,7 +20,11 @@ import { EMAIL_SERVICE } from '../common/constants/services';
     RmqModule.register({ 
       name: EMAIL_SERVICE,
     }),
-    
+
+    //MulterModule.registerAsync({
+     // useClass: MulterConfigService,
+    //}),
+    MulterModule.register(multerConfig),
     
   ],
   controllers: [UsersController],
