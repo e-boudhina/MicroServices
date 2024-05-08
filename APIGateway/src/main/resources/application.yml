@@ -11,8 +11,18 @@ spring:
           predicates:
             - Path=/auth/**,/permissions/**,/users/**,/roles/**
 
+        - id: order-mission
+          uri: ${ORDER_MISSION_SERVICE_URL:-http://localhost:3001}
+          predicates:
+            - Path=/order-mission/**,/tasks/**,/users/**
+            
+        - id: leave-management
+          uri: ${leave-management_SERVICE_URL:-http://localhost:3004}
+          predicates:
+            - Path=/leave/**
+            
         - id: TEST_SERVICE
-          uri: ${TEST_SERVICE_URL:-http://localhost:3600}
+          uri: ${TEST_SERVICE_URL:-http://localhost:3002}
           predicates:
             - Path=/test/**
 
