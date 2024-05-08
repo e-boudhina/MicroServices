@@ -3,6 +3,7 @@ import { BeforeInsert, Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, 
 
 import { IsEmail } from "class-validator";
 import { Role } from "../../roles/entities/role.entity";
+import { Exclude } from "class-transformer";
 //import { OrderMission } from "../../order-mission/entities/order-mission.entity";
 @Entity({ name: 'users' })
 //If you have 2 unique colums that must not be repeated use this one (use the @Colum annotation when you want field the be unique seprately but not Combined)
@@ -27,11 +28,13 @@ export class User {
     //managed in controller
     @Column({unique: true}) 
     email: string;
-
-    @Column()
+    
+    //@Exclude() //using discard will also prevent you from comparing passwrod since the respository uses this entity password will not be present
+    @Column() 
     password: string;
 
-    @Column({ nullable: true })
+    
+    @Column({ nullable: true}) 
     hashedRt?: string; // Use '?' to indicate optional property
 
     //what happend if nullable is not set what I I set it to false and ? symbol
@@ -49,6 +52,8 @@ export class User {
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt: Date;
 
+    @Column({default: 0})
+    disabled: boolean; 
     /* 
     eager loading fetches the related data along with the main entity,
     while lazy loading defers the loading of related data until you explicitly access it

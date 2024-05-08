@@ -12,6 +12,12 @@ import { MailService } from '../mail/mail.service';
 import { EMAIL_SERVICE } from '../common/constants/services';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
+import { exit } from 'process';
+import { UserDto } from './dto/return-user.dto';
+import * as path from 'path';
+import * as fs from 'fs';
+
+
 
 
 const setTimeoutPromise = promisify(setTimeout);
@@ -108,7 +114,10 @@ export class UsersService {
 
   async getAllUsers(): Promise<any> {
     try{
-      return await this.usersRepository.find();
+      return await this.usersRepository.find({
+        select: ['id', 'username', 'email',   'disabled', 'role_id'],
+      }
+      );
       
     }catch(error){
       throw new InternalServerErrorException('User creation failed!');
@@ -124,12 +133,36 @@ export class UsersService {
         return {
           message: `No registered user under the id ${id}!`
         };
+       console.log("finde one by after");
       }
     }catch(error){
       throw new InternalServerErrorException('User creation failed!');
     }
   }
+  async getUsersByIds (ids : number []){
+    try {
+      const users = await this.usersRepository.findByIds(ids);
+      return users;
+    } catch(error){
+      throw new InternalServerErrorException('failed to retreive informations!');
+    }
+  }
 
+  async getUsersWhereNotInIDs(ids : number[]){
+    try{
+      if (ids.length == 0) return await this.getAllUsers();
+      const entitiesNotInIds = await this.usersRepository
+          .createQueryBuilder('users')
+          .where('users.id NOT IN (:...ids)', { ids :ids })
+          .getMany();
+      if(entitiesNotInIds)  return entitiesNotInIds;
+      else return [];
+
+    } catch(error){
+
+      throw new InternalServerErrorException('failed to retreive informations!');
+    }
+  }
   async getAuthenticatedUser(id: number):  Promise<any> {
     try{
       const retrievedUser= await this.usersRepository.findOneBy({id});
@@ -169,40 +202,22 @@ export class UsersService {
         Instead, it's using the provided id: updateUserDto.role_id even when it's null,
         and it retrieves the first role with the specified id (which is your default role).
         */
-        let role: Role | null = null;
-        if (updateUserDto.role_id !== null && updateUserDto.role_id !== undefined) {
-          const  role = await this.rolesRepository.findOneBy({ id: updateUserDto.role_id });
-        }
-        
-        console.log(role);
-        if (!role) {
-          // If the role already exists, you might want to throw an exception or handle it accordingly
-          throw new ConflictException(`You cannot assign a role that does not exist to a user! No role with id '${updateUserDto.role_id}'`);
-        
-        }
-        console.log("found");
-        const updatedUser = await this.usersRepository.create({
-          username: updateUserDto.username,
-          email: updateUserDto.email,
-          password: updateUserDto.password,
-          role_id: role
-        });
-        console.log(updatedUser);
-        
-        //checking user input is done on the dto
-        const result2 = await this.usersRepository.update(id, updatedUser);
-        if(result2){
+       //If user sends user id field
+        console.log("test ");
+        const result3 = await this.usersRepository.update(id, updateUserDto);
+        if(result3){
           return {
-            message: `User with id ${id} update succssfully!`,
+            message: `User update succssfully!`,
             //data: result2
           }; 
         }
-      }else{
-        return {
-          message: `User with id ${id} not!`,
-          //data: result2
-        }; 
-      }
+        }else{
+          return {
+            message: result.message
+          }
+        }
+      
+    
     }catch(error){
       if (error instanceof HttpException) {
         // If it's already an HttpException, rethrow it directly
@@ -219,12 +234,12 @@ export class UsersService {
       const result = await this.findOneBy(id);
       console.log(result);
 
-      if(result instanceof(User)){
+      if(result instanceof(User)){""
         console.log("deleting");
         const result2 = await this.usersRepository.remove(result);
         if(result2){
           return {
-            message: `User with id ${id} removed succssfully!`,
+            message: `User removed succssfully!`,
             data: result2
           }; 
         }
@@ -239,6 +254,68 @@ export class UsersService {
       throw new InternalServerErrorException('Deletion failed');
     }
 
+  }
+
+  async disableUserAccount(id: number) {
+    const result = await this.findOneBy(id);
+    //if result contains an error
+    if(result.message){
+      return result;
+    }
+    //if it does not contain an error than it must contain the user, so check instance type as a precaution
+    if(result instanceof(User)){
+      result.disabled=true;
+      const res = await this.usersRepository.update(id, result);
+      if(res.affected > 0){
+        return {
+          message: `Account has been disabled successfully`,
+        };
+      }
+    }
+  }
+
+  async enableUserAccount(id: number) {
+    const result = await this.findOneBy(id);
+    //if result contains an error
+    if(result.message){
+      return result;
+    }
+    //if it does not contain an error than it must contain the user, so check instance type as a precaution
+    if(result instanceof(User)){
+      result.disabled=false;
+      const res = await this.usersRepository.update(id, result);
+      if(res.affected > 0){
+        return {
+          message: `Account is now active`,
+        };
+      }
+    }
+  }
+
+  async storeImage(image: Express.Multer.File) {
+    /*
+    console.log(image.originalname);
+    console.log(__dirname);
+    const imagePath = path.join(__dirname, '..', 'profile', 'images', image.originalname);
+    console.log(imagePath);
+
+    // Check if the directory exists, if not create it
+    if (!fs.existsSync(path.dirname(imagePath))) {
+      fs.mkdirSync(path.dirname(imagePath), { recursive: true });
+    }
+
+    // Write the uploaded file to the destination
+    fs.writeFileSync(imagePath, image.buffer);
+
+    return `Image uploaded successfully: ${imagePath}`;
+    */
+      // You can access the file buffer directly without writing it to disk
+      const fileBuffer = image.buffer;
+
+      // You can now perform operations with the file buffer as needed
+      // For example, you can store it in a database, AWS S3, etc.
+  
+      return `Image uploaded successfully`;
   }
 
   //Helper functions

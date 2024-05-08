@@ -17,7 +17,13 @@ import { Request, Response } from 'express';
 import { EMAIL_SERVICE } from './common/constants/services';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
+import { RegisterUserDto } from './users/dto/register-user.dto';
+import { register } from 'module';
 
+interface ResetPasswordResponse {
+    message: string;
+    remainingTime?: number; // Add remainingTime as an optional property
+}
 
 @Injectable()
 export class AuthService {
@@ -81,7 +87,7 @@ export class AuthService {
         await this.usersRepository.update(userId, { hashedRt: hash });
     }
 
-    async signIn(userDTO: CreateUserDto): Promise<any>{
+    async signIn(userDTO: RegisterUserDto): Promise<any>{
         try{ 
            
         const retrievedUser = await this.usersRepository.findOneBy({ email: userDTO.email });
@@ -111,15 +117,86 @@ export class AuthService {
         }catch(error){
            
             if (error instanceof HttpException) {
-                console.log('instance of')
+                console.log('instance of');
                 // If it's already an HttpException, rethrow it directly
                 throw error;
             } else {
-                console.log(error)
+                console.log(error);
                 // If it's not an HttpException, create a new one with a dynamic response
                 throw new HttpException(error.message, error.status);
             }
         }
+    }
+
+    async signUp( userDTO: RegisterUserDto): Promise <any>{
+        try{
+            
+            //Checking if a user exists with that email
+            const existingUser = await this.usersRepository.findOneBy({ email: userDTO.email });
+    
+            if (existingUser) {
+                //console.log('Email already exists');
+              // Email already exists, throw a custom exception
+              throw new HttpException('Email already exists!', HttpStatus.CONFLICT);
+            }
+            
+            //Hashing password
+            //console.log("password = "+userDTO.password)
+            const rawPwd = userDTO.password;
+            //console.log('generated pwd'+rawGenatedPwd);
+            const pwdHash = await this.hashData(rawPwd);
+            //validation is being done on the DTO but you can also do it here if you want to
+    
+            // Fetching use role:
+            //you can make this dynmaic by sending the key value of the role and adding pulling it from the user object here
+            const userRole = await this.rolesRepository.findOneBy({ name: "user" });
+        
+            //Be carefull "create" fn is only creating and instance, you need the save to persist it in the database
+            //add exception here to manage role not found
+            const newUser = await this.usersRepository.save({
+                    email: userDTO.email,
+                    password: pwdHash,
+                    role_id: userRole
+            });
+            // Check if the user was added successfully
+            if (!newUser) {
+              throw new HttpException('Failed to create user!', HttpStatus.BAD_REQUEST);
+            }
+            //Success
+            //Notify user via email
+            //figure out a way on how 2 send 2 return to the front end ( user created + user notified)
+            this.logger.log('Sending User Registration Email Payload...');
+            //this.mailService.sendNewUserWithRoleEmail(newUser, rawGenatedPwd).then((res)=> console.log(res)); 
+            /*
+            try to handle WARN [Server] An unsupported message was received. It has been negative acknowledged, so it will not be re-delivered. Pattern: {"cmd":"send_user_registration_email"}
+            error when the the name of the method is not found
+            */
+            const response = await lastValueFrom(this.emailService.send({ cmd: 'send_user_registration_email' }, newUser)); 
+            this.logger.log(response.message);
+            return response;
+    
+            //Only for signup - not needed here
+            /* 
+            const tokens = await this.getTokens(newUser.id, newUser.email);
+            await this.updateRtHash(newUser.id, tokens.refresh_token);
+            return tokens;
+            */
+        }catch(error){
+            console.log(error);
+            //console.log('Caught exception status code: ', error.getStatus());
+            //throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+            // throw new HttpException(error.message, error.status);
+           
+            if (error instanceof HttpException) {
+                // If it's already an HttpException, rethrow it directly
+                throw error;
+            } else{
+                throw new HttpException("Internal server error!", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+          
+    
+        }
+        //it's returning 500, how can it know email exists and I did not treat that case
     }
    
     async logout(userId: number, req: Request, res: Response){
@@ -269,10 +346,7 @@ export class AuthService {
             await this.usersRepository.save(user);
             this.logger.log('Sending Reset Password Email Payload...');
             
-            interface ResetPasswordResponse {
-                message: string;
-                remainingTime?: number; // Add remainingTime as an optional property
-              }
+
               
             const response:ResetPasswordResponse = await lastValueFrom(this.emailService.send({ cmd: 'send_reset_password_email' }, user)); 
             const currentTimeInMs = Date.now();

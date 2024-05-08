@@ -72,6 +72,26 @@
       "compilerOptions": {
         "tsConfigPath": "apps/material-management/tsconfig.app.json"
       }
+    },
+    "order-mission": {
+      "type": "application",
+      "root": "apps/order-mission",
+      "entryFile": "main",
+      "sourceRoot": "apps/order-mission/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/order-mission/tsconfig.app.json"
+      }
+    },
+
+    "leave-management": {
+      "type": "application",
+      "root": "apps/leave-management",
+      "entryFile": "main",
+      "sourceRoot": "apps/leave-management/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/leave-management/tsconfig.app.json"
+      }
     }
+
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, InternalServerErrorException, HttpException, Res, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, InternalServerErrorException, HttpException, Res, Req, UseInterceptors, UploadedFile, ParseFilePipeBuilder } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -7,12 +7,17 @@ import { Response } from 'express';
 import { get } from 'http';
 import { Request } from "express";
 import * as jwt from 'jsonwebtoken';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { CustomUploadFileTypeValidator } from './validators/CustomUploadFileTypeValidator';
+import { MAX_PROFILE_PICTURE_SIZE_IN_BYTES, VALID_UPLOADS_MIME_TYPES } from '../common/constants/variables';
+import { Ctx, MessagePattern, Payload, RmqContext } from "@nestjs/microservices";
+
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Public()
-  @Post('/createUser')
+  @Post()
   async createUser(@Res() response: Response, @Body() userDTO:CreateUserDto){
     
       try{
@@ -38,7 +43,30 @@ export class UsersController {
       }
     }
   }
-  
+  @MessagePattern({ cmd: 'get_user_by_id' })
+  async findOne( @Ctx() context: RmqContext , @Payload() id: number ) {
+    const channel = context.getChannelRef();
+    const message = context.getMessage();// get message from context
+    channel.ack(message);
+
+    return this.usersService.findOneBy(id);
+
+  }
+  @MessagePattern({ cmd: 'get_users_by_ids' })
+  async findUsersByIds (@Ctx() context: RmqContext , @Payload() ids: number [] ){
+    const channel = context.getChannelRef();
+    const message = context.getMessage();// get message from context
+    channel.ack(message);
+    return this.usersService.getUsersByIds(ids);
+  }
+
+  @MessagePattern({cmd : 'get_users_not_in_ids'})
+  async findUsersNotHavingIds(@Ctx() context: RmqContext , @Payload() ids: number []){
+    const channel = context.getChannelRef();
+    const message = context.getMessage();// get message from context
+    channel.ack(message);
+    return this.usersService.getUsersWhereNotInIDs(ids);
+  }
 
 /*
   @Public()
@@ -128,4 +156,56 @@ export class UsersController {
       };
     }
   }
+  @Public()
+  @Post('disable-account/:id')
+  disableUserAccount(@Param('id') id: number) {
+    try {
+      console.log('hey');
+      return this.usersService.disableUserAccount(id);
+    }catch (error) {
+
+    }
+  }
+  
+  @Public()
+  @Post('enable-account/:id')
+  enableUserAccount(@Param('id') id: number) {
+    try {
+      console.log('hey');
+      return this.usersService.enableUserAccount(id);
+    }catch (error) {
+
+    }
+  }
+
+@Public()
+@Post('upload')
+@UseInterceptors(FileInterceptor('file'))
+async uploadFile(
+  @UploadedFile(
+    new ParseFilePipeBuilder()
+      //.addFileTypeValidator({
+     //   fileType: 'image/jpeg',
+      //})
+      .addValidator(
+        new CustomUploadFileTypeValidator({
+          fileType: VALID_UPLOADS_MIME_TYPES,
+        }),
+      )
+      .addMaxSizeValidator({
+        maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES
+      })
+      .build({
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
+      }),
+  ) file: Express.Multer.File
+) {
+  try {
+    const result = await this.usersService.storeImage(file);
+    return result;
+  } catch (error) {
+    throw new Error(`Error uploading file: ${error.message}`);
+  }
+
+}
 }

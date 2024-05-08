@@ -12,6 +12,19 @@ export class EmailController {
     ) {}
 
 
+      
+  @MessagePattern({ cmd: 'send_user_registration_email' })
+  async sendUserRegistrationEmail(@Payload() user: any, @Ctx() context: RmqContext) {
+    //acknlewadge that the message is recived and remove it from the queue
+    this.logger.log('Payload recieved');
+    console.log(user);
+
+    this.rmqService.ack(context);
+    const res = await this.emailService.sendUserRegistrationEmail(user);
+    this.logger.log(res.message);
+    return res;
+  }
+
   @MessagePattern({ cmd: 'send_create_user_email' })
   async sendUserCreationEmail(@Payload() data: any, @Ctx() context: RmqContext) {
     //acknlewadge that the message is recived and remove it from the queue

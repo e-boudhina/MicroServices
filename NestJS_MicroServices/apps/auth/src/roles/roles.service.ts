@@ -70,7 +70,7 @@ export class RolesService {
     const result = await this.rolesRepository.update(id, role);
     if(result){
       return {
-        message: `The Role under the id ${id} has been updated successfully!`,
+        message: `Role updated successfully!`,
         data: await this.getRoleById(id)
       };  
     }
@@ -84,7 +84,7 @@ export class RolesService {
       const result = await this.rolesRepository.remove(role);
       if(result){
       return {
-        message: `Role with id ${id} removed succssfully!`,
+        message: `Role removed succssfully!`,
         data: result
       }; 
       //Do I need to handle the else here or in the controller or no need for that? => No, it is handled by the findby Id :)
