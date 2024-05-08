@@ -63,6 +63,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/email/tsconfig.app.json"
       }
+    },
+    "material-management": {
+      "type": "application",
+      "root": "apps/material-management",
+      "entryFile": "main",
+      "sourceRoot": "apps/material-management/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/material-management/tsconfig.app.json"
+      }
     }
   }
 }

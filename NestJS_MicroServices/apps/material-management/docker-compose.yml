@@ -1,0 +1,20 @@
+version: '3.9'
+services:
+
+mysql:
+  image: 'mysql:5.6'
+  networks:
+    - office-network
+  container_name: mysql-container
+  environment:
+    #- MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    #- MYSQL_USER=root
+    - MYSQL_DATABASE=hr_management_platform
+    - MYSQL_ROOT_PASSWORD=axelites_pwd
+    - MYSQL_SYNCHRONIZE=true
+  ports:
+    - '3308:3306'
+  volumes: # you need to delete this volume or else docker will only create the db the first time
+    # then it will look into this volume and does not check if it exist or not (docker volume ls - docker volume rm 5twingraduationproject_db)
+    - db:/var/lib/mysql
+  #restart: on-failure
