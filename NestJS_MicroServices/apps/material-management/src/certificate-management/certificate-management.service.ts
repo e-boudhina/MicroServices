@@ -1,3 +1,4 @@
+// certificate-management.service.ts
 import { Injectable } from '@nestjs/common';
 import * as PDFDocument from 'pdfkit';
 import * as fs from 'fs';
@@ -5,7 +6,6 @@ import { promisify } from 'util';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CertificateManagement } from './entities/certificate-management.entity';
-import * as archiver from 'archiver';
 
 const writeFileAsync = promisify(fs.writeFile);
 
@@ -36,9 +36,6 @@ export class CertificateManagementService {
       doc.text(`Position: ${data.position}`, 100, 150);
       doc.text(`Status: ${data.status}`, 100, 170);
 
-      // Add a watermark
-      doc.opacity(0.1).text('Confidential', 200, 250);
-
       doc.end();
 
       const buffer = [];
@@ -50,7 +47,7 @@ export class CertificateManagementService {
     });
 
     // Write PDF to local folder
-    const folderPath = 'C:/Users/DELL/Desktop/pdfFiles'; // Modify the path here
+    const folderPath = './MicroServices/uploads/pdfFiles'; // Modify the path here
     if (!fs.existsSync(folderPath)) {
       fs.mkdirSync(folderPath, { recursive: true });
     }
@@ -78,21 +75,6 @@ export class CertificateManagementService {
 
   async getAllCertificates(): Promise<CertificateManagement[]> {
     return this.certificateRepository.find();
-  }
-
-  async getAllPDFs(): Promise<string> {
-    const folderPath = 'C:/Users/DELL/Desktop/pdfFiles'; // Modify the path here
-    if (fs.existsSync(folderPath)) {
-      const output = fs.createWriteStream('pdfFiles.zip');
-      const archive = archiver('zip');
-
-      archive.pipe(output);
-      archive.directory(folderPath, false);
-      await archive.finalize();
-
-      return 'pdfFiles.zip';
-    }
-    return '';
   }
 
   async updateCertificate(id: number, newData: any): Promise<void> {

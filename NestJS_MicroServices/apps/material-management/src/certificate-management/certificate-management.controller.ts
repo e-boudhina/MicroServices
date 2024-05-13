@@ -1,3 +1,4 @@
+// certificate-management.controller.ts
 import {
   Controller,
   Post,
@@ -5,14 +6,12 @@ import {
   Res,
   Get,
   Param,
-  NotFoundException,
   Delete,
   Put,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { CertificateManagementService } from './certificate-management.service';
 import { CreateCertificateManagementDto } from './dto/create-certificate-management.dto';
-import { CertificateManagement } from './entities/certificate-management.entity';
 
 @Controller('certificate-management')
 export class CertificateManagementController {
@@ -20,7 +19,7 @@ export class CertificateManagementController {
     private readonly certificateService: CertificateManagementService,
   ) {}
 
-  @Post('/generate-certificate')
+  @Post()
   async generateCertificate(
     @Body() data: CreateCertificateManagementDto,
     @Res() res: Response,
@@ -34,42 +33,26 @@ export class CertificateManagementController {
     res.send(pdfBuffer);
   }
 
-  @Get('/:id')
-  async getCertificate(
-    @Param('id') id: number,
-  ): Promise<CertificateManagement> {
-    const certificate = await this.certificateService.getCertificate(id);
-    if (!certificate) {
-      throw new NotFoundException('Certificate not found');
-    }
-    return certificate;
+  @Delete(':id')
+  async removeCertificate(@Param('id') id: number): Promise<void> {
+    await this.certificateService.removeCertificate(id);
+  }
+
+  @Get(':id')
+  async getCertificate(@Param('id') id: number) {
+    return this.certificateService.getCertificate(id);
   }
 
   @Get()
-  async getAllCertificates(): Promise<CertificateManagement[]> {
+  async getAllCertificates() {
     return this.certificateService.getAllCertificates();
   }
 
-  @Get('/pdfs')
-  async getAllPDFs(@Res() res: Response): Promise<void> {
-    const pdfs = await this.certificateService.getAllPDFs();
-    res.set({
-      'Content-Type': 'application/zip',
-      'Content-Disposition': 'attachment; filename="pdfFiles.zip"',
-    });
-    //res.zip(pdfs); // Assuming you have a method to zip the PDF files
-  }
-
-  @Put('/:id')
+  @Put(':id')
   async updateCertificate(
     @Param('id') id: number,
     @Body() newData: any,
   ): Promise<void> {
     await this.certificateService.updateCertificate(id, newData);
-  }
-
-  @Delete('/:id')
-  async removeCertificate(@Param('id') id: number): Promise<void> {
-    await this.certificateService.removeCertificate(id);
   }
 }
