@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, InternalServerErrorException, HttpException, Res, Req, UseInterceptors, UploadedFile, ParseFilePipeBuilder } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, InternalServerErrorException, HttpException, Res, Req, UseInterceptors, UploadedFile, ParseFilePipeBuilder, Logger, UploadedFiles } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -7,13 +7,18 @@ import { Response } from 'express';
 import { get } from 'http';
 import { Request } from "express";
 import * as jwt from 'jsonwebtoken';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CustomUploadFileTypeValidator } from './validators/CustomUploadFileTypeValidator';
-import { MAX_PROFILE_PICTURE_SIZE_IN_BYTES, VALID_UPLOADS_MIME_TYPES } from '../common/constants/variables';
+import { MAX_PROFILE_PICTURE_SIZE_IN_BYTES, MAX_PROFILE_PICTURE_UPLOAD_COUNT, VALID_UPLOADS_MIME_TYPES } from '../common/constants/variables';
 import { Ctx, MessagePattern, Payload, RmqContext } from "@nestjs/microservices";
+import { CustomUploadFileSizeValidator } from './validators/CustomUploadFileSizeValidator';
+import { CustomUploadFileCountValidator } from './validators/CustomUploadFileCountValidator';
+import { ImageFilter, imageFilterFactory } from './imageFilter';
 
 @Controller('users')
 export class UsersController {
+  private readonly logger = new Logger(UsersController.name);
+
   constructor(private readonly usersService: UsersService) {}
 
   @Public()
@@ -180,9 +185,13 @@ export class UsersController {
 
 @Public()
 @Post('upload')
-@UseInterceptors(FileInterceptor('file'))
+@UseInterceptors(FileInterceptor('file', {
+  fileFilter: imageFilterFactory(new ImageFilter({ allowedExtensions: ['.jpg', '.jpeg', '.png'] })),
+}))
 async uploadFile(
+ 
   @UploadedFile(
+     /*
     new ParseFilePipeBuilder()
       //.addFileTypeValidator({
      //   fileType: 'image/jpeg',
@@ -192,19 +201,34 @@ async uploadFile(
           fileType: VALID_UPLOADS_MIME_TYPES,
         }),
       )
-      .addMaxSizeValidator({
-        maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES
-      })
+      .addValidator(
+        new CustomUploadFileSizeValidator({
+          maxSize: MAX_PROFILE_PICTURE_SIZE_IN_BYTES
+        }),
+      )
+      //.addValidator(
+      //  new CustomUploadFileCountValidator({
+      //    maxCount: 1
+      //  }),
+      //)
       .build({
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
       }),
+      */
   ) file: Express.Multer.File
 ) {
   try {
-    const result = await this.usersService.storeImage(file);
-    return result;
+    this.logger.log("inside contoller");
+    console.log(file);
+   //if (!file) {
+     // throw new Error('No image uploaded. Please upload one!');
+   // }
+    //const result = await this.usersService.storeImage(file);
+    //return result;
   } catch (error) {
-    throw new Error(`Error uploading file: ${error.message}`);
+    
+    this.logger.log(error);
+    throw new Error(`Error uploading file: ${error}`);
   }
 
 }

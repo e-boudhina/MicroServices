@@ -21,7 +21,7 @@ import { User } from '../../users/entities/user.entity';
           database: configService.getOrThrow('MYSQL_DATABASE'),
           autoLoadEntities: true,
           //Automaticly synchronize databases colums, if you change something here it automaticly updates the db
-          synchronize: configService.getOrThrow('MYSQL_SYNCHRONIZE'),
+          synchronize: configService.getOrThrow('MYSQL_SYNCHRONIZE'), // shouldn't be used in production - may lose data
           migrationsRun: true,
           entities: [User, Role],
           //migrations: ['/src/migration/**'],

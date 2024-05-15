@@ -310,6 +310,7 @@ export class UsersService {
     return `Image uploaded successfully: ${imagePath}`;
     */
       // You can access the file buffer directly without writing it to disk
+      this.logger.log("I am here");
       const fileBuffer = image.buffer;
 
       // You can now perform operations with the file buffer as needed

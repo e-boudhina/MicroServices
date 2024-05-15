@@ -59,8 +59,8 @@ export class User {
     while lazy loading defers the loading of related data until you explicitly access it
     */
 
-    
-    
+    @Column({nullable: true})
+    imagePath: string;    
     @ManyToOne(() => Role, role => role.users, { eager: true, onDelete: 'SET NULL' })
     @JoinColumn({ name: 'role_id' }) 
     role_id: Role;
